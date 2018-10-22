@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Ejercicio 4. Propiedades y métodos</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+
+<canvas id="lienzo" width="800" height="800" style="border:1px solid #000000; background-color: lightblue;"></canvas>
+<p id="P1">Juego de la vida. Pulse "Jugar" para empezar</p>
+<div id="cuadroTexto1">1</div>
+<div id="cuadroTexto2">2</div>
+<div id="cuadroTexto3">3</div>
+<div id="cuadroTexto4">4</div>
+
+<input type="button" value="Jugar" onclick="m.evolucionar()"/>
+<input type="button" value="Detener" onclick="m.detener()"/>
+<input type="button" value="Paso" onclick="m.paso()"/>
+<input type="button" value="Limpiar" onclick="m.limpiar()"/>
+
+<script language="JavaScript" type="text/javascript">
+
+	var c = document.getElementById("lienzo");
+	var ctx = c.getContext("2d");
+	var mundoX = 40;
+	var mundoY = 40;
+	var timer;
+	
+	m = new Mundo(mundoX, mundoY);
+	m.createGrid();
+	
+	function Celula(x, y){
+		
+		this.viva = false;
+		this.vecinos = 0;
+		this.tiempoViva = 0;
+		this.pos = [x, y];
+		
+		this.toString = function(){
+			
+			var resultado;
+			resultado = "Estado: "+ this.viva +"\n Vecinos: "+ this.vecinos +"\n Tiempo: "+ this.tiempoViva + "\n Posicion: "+ this.pos;
+			return resultado;
+		}
+		
+		this.calcularVecinos = function(celulas){	
+			
+			var x = this.pos[0];
+			var y = this.pos[1];
+			var cont = 0;
+			
+			var x2 = x - 1;
+			var x3 = x + 1;
+			var y2 = y - 1;
+			var y3 = y + 1;
+			if (x2 == -1)
+				x2 = mundoX - 1;
+			if (x3 == mundoX)
+				x3 = 0;
+			if (y2 == -1)
+				y2 = mundoY - 1;
+			if (y3 == mundoY)
+				y3 = 0;
+			
+			if (celulas[x2][y2].viva) {
+				cont++;
+			}
+			if (celulas[x][y2].viva) {
+				cont++;
+			}
+			if (celulas[x3][y].viva) {
+				cont++;
+			}
+			if (celulas[x2][y].viva) {
+				cont++;
+			}
+			if (celulas[x][y3].viva) {
+				cont++;
+			}
+			if (celulas[x3][y3].viva) {
+				cont++;
+			}
+			if (celulas[x2][y3].viva) {
+				cont++;
+			}
+			if (celulas[x3][y2].viva) {
+				cont++;
+			}
+			
+			this.vecinos = cont;
+		
+			
+			/*if (x-1 < 0){
+				xx = mundoX-1;
+			}
+			if (y-1 < 0){
+				yy = mundoY-1;
+			}
+			if (x+1 > mundoX-1){
+				xx = 0;
+			}
+			if (y+1 > mundoY-1){
+				yy = 0;
+			}*/
+			
+			
+			/*if (x-1 < 0){
+				xx = mundoX-1;
+			}
+			if (y-1 <0){
+				yy = mundoY-1;
+			}
+			if (x-1 !< 0 && y-1 !< 0){
+				xx = x-1;
+				yy = y-1;
+			}
+			if (x+1 > mundoX-1){
+				xx = 0;
+			}
+			if (y+1 > mundoY-1){
+				yy = 0;
+			}
+			if (x+1 !> mundoX-1 && y+1 !> mundoY-1){
+				xx = x+1;
+				yy = y1;
+			}
+			
+			
+			if (celulas[x-1][y-1].viva) {
+				cont++;
+			}
+			if (celulas[x][y-1].viva) {
+				cont++;
+			}
+			if (celulas[x+1][y-1].viva) {
+				cont++;
+			}
+			if (celulas[x+1][y].viva) {
+				cont++;
+			}
+			if (celulas[x+1][y+1].viva) {
+				cont++;
+			}
+			if (celulas[x][y+1].viva) {
+				cont++;
+			}
+			if (celulas[x-1][y+1].viva) {
+				cont++;
+			}
+			if (celulas[x-1][y].viva) {
+				cont++;
+			}*/
+			
+			return cont;
+		}
+		
+		
+	}
+	function Mundo(mundoX, mundoY){
+	
+		var tamCel = [c.width/mundoX, c.width/mundoY];
+		var contador = 0;
+		var celulas;
+
+		c.addEventListener("mousemove", mark, false);
+		c.addEventListener("click", createCell, true);
+		iniciarMundo();
+		
+		this.createGrid = function() {
+			ctx.beginPath();
+			ctx.clearRect(0, 0, c.width, c.height); 
+			
+			for(i = 0; i < c.width; i += tamCel[0]){				
+				ctx.moveTo(i,0);
+				ctx.lineTo(i,c.height);
+			}
+			for(i = 0; i < c.width; i += tamCel[1]){
+				ctx.moveTo(0,i);
+				ctx.lineTo(c.width,i);
+			}
+			ctx.strokeStyle = "black";
+			ctx.stroke();
+		}
+		
+		function iniciarMundo(){
+			celulas = new Array(mundoX);
+			
+			for (var i = 0; i < mundoX; i++) {
+			  celulas[i] = new Array(mundoY);
+			}
+			
+			for (var i = 0; i<mundoX; i++){
+				for (var z = 0; z<mundoY; z++){
+					a = new Celula(i,z);
+					celulas[i][z] = a;
+				}
+			}
+		}
+		
+		function createCell(e) {
+			var pos = getMousePos(e);
+			var celPos = [pos[0]/tamCel[0],pos[1]/tamCel[1]];
+			
+			celulas[celPos[0]][celPos[1]].viva = !celulas[celPos[0]][celPos[1]].viva;
+			celulas[celPos[0]][celPos[1]].tiempoViva = 0;
+			drawCells();
+			
+			
+			
+		}
+		
+		this.limpiar = function(){
+			celulas = new Array(mundoX);
+			
+			for (var i = 0; i < mundoX; i++) {
+			  celulas[i] = new Array(mundoY);
+			}
+			
+			for (var i = 0; i<mundoX; i++){
+				for (var z = 0; z<mundoY; z++){
+					a = new Celula(i,z);
+					celulas[i][z] = a;
+				}
+			}
+			drawCells();
+		}
+		
+		function getMousePos (e) {
+			var pos = [0,0];
+			var rect = c.getBoundingClientRect();
+			
+			pos[0] = e.clientX - rect.left;
+			pos[1] = e.clientY - rect.top;
+	
+			return normalize(pos);
+		}
+		
+		Number.prototype.roundTo = function(num) {
+			var resto = this%num;
+			if (resto <= (num-1)) { 
+				return this-resto;
+			} else {
+				return this+num-resto;
+			}
+		}
+		
+		Number.prototype.clamp = function(min, max) {
+			return Math.min(Math.max(this, min), max);
+		}
+		
+		function normalize(pos){
+			
+			pos[0]=pos[0].roundTo(tamCel[0]);
+			pos[1]=pos[1].roundTo(tamCel[1]);
+			return pos;
+		}
+		
+		this.paso = function(){
+			celulasAux = new Array(mundoX);
+			
+			for (var i = 0; i < mundoX; i++) {
+			  celulasAux[i] = new Array(mundoY);
+			}
+			
+			for (var i = 0; i<mundoX; i++){
+				for (var z = 0; z<mundoY; z++){
+					a = new Celula(i,z);
+					celulasAux[i][z] = a;
+				}
+			}
+			
+			for(var i = 0; i<mundoX; i++){
+				for(var z =0; z<mundoY; z++){
+					cel = celulas[i][z];
+					vecinos = cel.calcularVecinos(celulas);
+					
+					if (vecinos == 3){
+						celulasAux[i][z].viva = true;
+					}
+					if (vecinos > 3 || vecinos < 2){
+						celulasAux[i][z].viva = false;
+					}
+					if (vecinos == 2){
+						celulasAux[i][z].viva = cel.viva;  
+					}
+					
+					if(celulas[i][z].viva && cel.viva == celulasAux[i][z].viva){
+						celulasAux[i][z].tiempoViva = cel.tiempoViva;
+						celulasAux[i][z].tiempoViva++;
+					}
+				}
+			}
+			celulas = celulasAux;
+			drawCells();
+		}
+		
+		this.evolucionar = function(){
+			timer = setInterval(this.paso, 1000/10);
+		}
+		
+		this.detener = function(){
+			clearTimeout(timer);
+		}
+		
+		function mark(e){
+			var pos = getMousePos(e);
+			var celPos = [pos[0]/tamCel[0], pos[1]/tamCel[1]];
+			celPos[0] = celPos[0].clamp(0,mundoX-1);
+			celPos[1] = celPos[1].clamp(0,mundoY-1);
+			celulas[celPos[0]][celPos[1]].calcularVecinos(celulas);
+			var cel = celulas[celPos[0]][celPos[1]];
+			document.getElementById("cuadroTexto1").innerHTML= "Evento de ratón número " + contador;contador++;
+			document.getElementById("cuadroTexto2").innerHTML= "Coordenadas en el grid: " + pos[0] + "," + pos[1];
+			document.getElementById("cuadroTexto3").innerHTML= cel.toString();
+			
+		}
+		
+		function drawCells(){
+			for(var i = 0; i<mundoX; i++){
+				for(var z =0; z<mundoY; z++){
+					
+					var aux = celulas[i][z];
+					if (aux.viva == true){
+						ctx.fillStyle = "red";
+						ctx.fillRect(i*tamCel[0], z*tamCel[1],tamCel[0]-1,tamCel[1]-1);
+					}else{
+						ctx.fillStyle = "lightblue";
+						ctx.fillRect(i*tamCel[0], z*tamCel[1],tamCel[0]-1,tamCel[1]-1);
+					}
+					
+				}
+			}
+		}
+	
+	}
+</script>
+
+
+</body>
+</html>
